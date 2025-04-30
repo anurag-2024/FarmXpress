@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { BASE_URL } from "../utils/constants";
-import { Truck, MapPin, ArrowRight, Loader2 } from "lucide-react";
+import { Truck, MapPin, ArrowRight, Loader2, Map } from "lucide-react";
+import RouteMap from "./RouteMap";
+// import { Loader } from "react-loader-spinner";
 
 const MergeableSchedule = () => {
   const [mergeablePairs, setMergeablePairs] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [selectedPair, setSelectedPair] = useState(null);
 
   const HandleMergeablePairs = async () => {
     try {
@@ -14,12 +17,22 @@ const MergeableSchedule = () => {
         withCredentials: true,
       });
       setMergeablePairs(res.data.mergeablePairs || []);
+      setSelectedPair(null);
     } catch (err) {
       console.error("Error fetching mergeable pairs:", err);
       setMergeablePairs([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const convertStopsToCoordinates = (stops) => {
+    // This is a placeholder - you'll need to implement actual geocoding
+    // For now, we'll return dummy coordinates
+    return stops.map((stop, index) => ({
+      lat: 20.5937 + (index * 0.01),
+      lng: 78.9629 + (index * 0.01),
+    }));
   };
 
   return (
@@ -65,6 +78,15 @@ const MergeableSchedule = () => {
                       <h3 className="text-2xl font-bold text-white">
                         Route Combination {index + 1}
                       </h3>
+                      <button
+                        onClick={() => setSelectedPair(selectedPair === index ? null : index)}
+                        className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
+                      >
+                        <Map className="w-5 h-5" />
+                        <span className="text-white font-medium">
+                          {selectedPair === index ? 'Hide Map' : 'Show Map'}
+                        </span>
+                      </button>
                     </div>
                   </div>
                   
@@ -129,6 +151,14 @@ const MergeableSchedule = () => {
                     ))}
                   </div>
 
+                  {selectedPair === index && (
+                    <div className="p-8 border-t border-gray-700">
+                      <h4 className="text-xl font-semibold text-white mb-6">Route Visualization</h4>
+                      <RouteMap 
+                        stops={convertStopsToCoordinates([...pair.truckOneStops, ...pair.truckTwoStops])}
+                      />
+                    </div>
+                  )}
                 </div>
               ))
             ) : (
